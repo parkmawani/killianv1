@@ -36,22 +36,22 @@ async function startNoticeWatcher(client) {
             // 가장 최신 공지 선택
             const latest = notices[0];
 
-            // channel-config.json 파일 경로
-            const channelConfigPath = path.join(__dirname, '..', 'channel-config.json');
+            // last-sent-config.json 파일 경로
+            const lastSentConfigPath = path.join(__dirname, '..', 'last-sent.json');
+            let lastSentConfig = {};
 
-            let channelConfig = {};
-            // channel-config.json 파일이 존재하지 않거나 비어있으면 새로운 공지를 가져옴
-            if (fs.existsSync(channelConfigPath)) {
+            // last-sent-config.json 파일이 존재하지 않거나 비어있으면 새로운 공지를 가져옴
+            if (fs.existsSync(lastSentConfigPath)) {
                 try {
-                    channelConfig = JSON.parse(fs.readFileSync(channelConfigPath, 'utf-8'));
+                    lastSentConfig = JSON.parse(fs.readFileSync(lastSentConfigPath, 'utf-8'));
                 } catch (err) {
                     console.error('[❌ 공지 감시 오류] JSON 파싱 오류:', err);
-                    channelConfig = {}; // JSON 오류가 발생하면 기본값 사용
+                    lastSentConfig = {}; // JSON 오류가 발생하면 기본값 사용
                 }
             }
 
             // lastSentThreadId가 없으면 공지를 보내고, 있으면 비교 후 새 공지만 보냄
-            if (channelConfig.lastSentThreadId !== latest.threadId) {
+            if (lastSentConfig.lastSentThreadId !== latest.threadId) {
                 const typeImages = {
                     '안내': './ano.png',
                     '점검': './close.png',
@@ -89,8 +89,8 @@ async function startNoticeWatcher(client) {
                 await channel.send({ embeds: [embed], files: [imageAttachment] });
 
                 // 마지막으로 보낸 공지의 threadId를 저장
-                channelConfig.lastSentThreadId = latest.threadId;
-                fs.writeFileSync(channelConfigPath, JSON.stringify(channelConfig, null, 2));
+                lastSentConfig.lastSentThreadId = latest.threadId;
+                fs.writeFileSync(lastSentConfigPath, JSON.stringify(lastSentConfig, null, 2));
                 console.log(`새 공지가 <#${noticeChannelId}>에 전송되었습니다.`);
             } else {
                 console.log('새로운 공지가 없습니다. (같은 공지)');

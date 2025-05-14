@@ -7,6 +7,9 @@ module.exports = {
         .setName('공지선택')
         .setDescription('마비노기 모바일 공지 목록에서 하나를 선택하여 보여줍니다.'),
     async execute(interaction) {
+        if (!interaction.member.permissions.has('ADMINISTRATOR')) {
+            return interaction.reply({ content: '❌ 이 명령어는 관리자만 사용할 수 있습니다.', ephemeral: true });
+        }
         await interaction.deferReply();
 
         try {

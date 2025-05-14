@@ -5,6 +5,9 @@ module.exports = {
         .setName('채널확인')
         .setDescription('현재 설정된 공지 채널을 확인합니다.'),
     async execute(interaction) {
+        if (!interaction.member.permissions.has('ADMINISTRATOR')) {
+            return interaction.reply({ content: '❌ 이 명령어는 관리자만 사용할 수 있습니다.', ephemeral: true });
+        }
         try {
             // 공지 채널을 저장한 변수 또는 저장소에서 불러오기
             const noticeChannelId = interaction.client.noticeChannelId;  // 가정: 봇에 설정된 공지 채널 ID가 여기에 저장되어 있음

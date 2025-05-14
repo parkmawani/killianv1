@@ -7,6 +7,9 @@ module.exports = {
         .setName('최근공지')
         .setDescription('마비노기 모바일 최신 공지를 불러옵니다.'),
     async execute(interaction) {
+        if (!interaction.member.permissions.has('ADMINISTRATOR')) {
+            return interaction.reply({ content: '❌ 이 명령어는 관리자만 사용할 수 있습니다.', ephemeral: true });
+        }
         await interaction.deferReply();
 
         try {

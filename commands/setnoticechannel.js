@@ -11,6 +11,9 @@ module.exports = {
                 .setDescription('공지 채널로 설정할 텍스트 채널을 선택해주세요.')
                 .setRequired(true)),
     async execute(interaction) {
+        if (!interaction.member.permissions.has('ADMINISTRATOR')) {
+            return interaction.reply({ content: '❌ 이 명령어는 관리자만 사용할 수 있습니다.', ephemeral: true });
+        }
         // 선택한 채널
         const channel = interaction.options.getChannel('channel');
 
