@@ -1,13 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle} = require('discord.js');
 const puppeteer = require('puppeteer');
 
 async function startNoticeWatcher(client) {
-    // 30초마다 공지 확인
     setInterval(async () => {
         try {
-            // Puppeteer로 마비노기 모바일 공지 페이지를 크롤링
             const browser = await puppeteer.launch({ headless: true });
             const page = await browser.newPage();
             await page.goto('https://mabinogimobile.nexon.com/News/Notice', {
@@ -26,32 +24,42 @@ async function startNoticeWatcher(client) {
                 });
             });
 
-            // 공지가 없으면 종료
             if (notices.length === 0) {
                 console.log('새로운 공지가 없습니다.');
                 await browser.close();
                 return;
             }
 
-            // 가장 최신 공지 선택
             const latest = notices[0];
 
-            // last-sent-config.json 파일 경로
-            const lastSentConfigPath = path.join(__dirname, '..', 'last-sent.json');
+            // JSON 파일 경로
+            // 상위 폴더로 가지 말고 현재 디렉토리에 생성
+            const lastSentConfigPath = path.join(__dirname, 'last-sent.json');
             let lastSentConfig = {};
 
-            // last-sent-config.json 파일이 존재하지 않거나 비어있으면 새로운 공지를 가져옴
-            if (fs.existsSync(lastSentConfigPath)) {
+            // 파일 읽기
+            let fileExists = fs.existsSync(lastSentConfigPath);
+            if (fileExists) {
                 try {
-                    lastSentConfig = JSON.parse(fs.readFileSync(lastSentConfigPath, 'utf-8'));
+                    const raw = fs.readFileSync(lastSentConfigPath, 'utf-8');
+                    console.log('[디버그] lastSentConfig 내용:', raw);
+                    lastSentConfig = JSON.parse(raw);
                 } catch (err) {
                     console.error('[❌ 공지 감시 오류] JSON 파싱 오류:', err);
-                    lastSentConfig = {}; // JSON 오류가 발생하면 기본값 사용
+                    lastSentConfig = {};
                 }
+            } else {
+                console.log('[디버그] lastSentConfig 파일 없음. 첫 실행으로 간주합니다.');
             }
 
-            // lastSentThreadId가 없으면 공지를 보내고, 있으면 비교 후 새 공지만 보냄
-            if (lastSentConfig.lastSentThreadId !== latest.threadId) {
+            const previousId = lastSentConfig.lastSentThreadId;
+            console.log('[디버그] 이전 공지 ID:', previousId);
+            console.log('[디버그] 최신 공지 ID:', latest.threadId);
+            console.log('[디버그] 현재 lastSentConfigPath 경로:', lastSentConfigPath);
+
+
+            // 이전 ID가 없거나 최신 ID와 다를 경우 전송
+            if (!previousId || previousId !== latest.threadId) {
                 const typeImages = {
                     '안내': './ano.png',
                     '점검': './close.png',
@@ -63,14 +71,21 @@ async function startNoticeWatcher(client) {
                 const imagePath = path.join(__dirname, 'images', imageFile);
                 const imageAttachment = new AttachmentBuilder(imagePath);
 
-                // 임베드 생성
                 const embed = new EmbedBuilder()
                     .setTitle(latest.title)
                     .setURL(`https://mabinogimobile.nexon.com/News/Notice/${latest.threadId}`)
                     .setImage(`attachment://${path.basename(imagePath)}`)
                     .setColor(0x00bfff);
 
-                // 공지 채널로 전송
+                const button = new ButtonBuilder()
+                    .setLabel('공지 확인') // 버튼 텍스트
+                    .setURL(`https://mabinogimobile.nexon.com/News/Notice/${latest.threadId}`) // 버튼 URL
+                    .setStyle(ButtonStyle.Link); // 버튼 스타일 (Link로 설정하여 URL 버튼으로 만듬)
+
+                const row = new ActionRowBuilder().addComponents(button);
+
+
+
                 const noticeChannelId = client.noticeChannelId;
                 if (!noticeChannelId) {
                     console.log('공지 채널이 설정되지 않았습니다.');
@@ -85,13 +100,12 @@ async function startNoticeWatcher(client) {
                     return;
                 }
 
-                // 공지 전송
-                await channel.send({ embeds: [embed], files: [imageAttachment] });
+                await channel.send({ embeds: [embed], files: [imageAttachment], components: [row] });
 
-                // 마지막으로 보낸 공지의 threadId를 저장
+                // 최신 ID 저장
                 lastSentConfig.lastSentThreadId = latest.threadId;
                 fs.writeFileSync(lastSentConfigPath, JSON.stringify(lastSentConfig, null, 2));
-                console.log(`새 공지가 <#${noticeChannelId}>에 전송되었습니다.`);
+                console.log(`✅ 새 공지가 <#${noticeChannelId}>에 전송되었습니다.`);
             } else {
                 console.log('새로운 공지가 없습니다. (같은 공지)');
             }
@@ -100,7 +114,7 @@ async function startNoticeWatcher(client) {
         } catch (error) {
             console.error('[❌ 공지 감시 오류]', error);
         }
-    }, 30000);  // 30초마다 공지 확인
+    }, 30000);
 }
 
 module.exports = { startNoticeWatcher };

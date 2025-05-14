@@ -21,6 +21,7 @@ module.exports = {
         console.log(`선택된 채널 ID: ${channel.id}`);
         console.log(`선택된 채널 타입: ${channel.type}`);  // 0: GUILD_TEXT
 
+
         // 채널이 텍스트 채널이 아닐 경우
         if (channel.type !== 0) {  // 0은 GUILD_TEXT를 의미
             console.log('❌ 텍스트 채널만 설정할 수 있습니다.');

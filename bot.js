@@ -1,17 +1,35 @@
 const fs = require('fs');
 const { Client, Collection, GatewayIntentBits, Events } = require('discord.js');
 const path = require('path');
-const { startNoticeWatcher } = require('./noticeWatcher');  // 추가된 부분
+const { startNoticeWatcher } = require('./noticeWatcher');
 require('dotenv').config();
 
-// notice-config.json에서 공지 채널 ID 읽기
-const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'channel-config.json')));
+// notice-config.json 경로 정의
+const configPath = path.join(__dirname, 'channel-config.json');
+
+// 파일이 없으면 기본 설정으로 생성
+if (!fs.existsSync(configPath)) {
+    const defaultConfig = { noticeChannelId: null };
+    fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2), 'utf-8');
+    console.log('[✔] channel-config.json 파일이 생성되었습니다.');
+}
+
+// 파일 읽기
+let config;
+try {
+    config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+} catch (err) {
+    console.error('[❌] channel-config.json 파싱 실패:', err);
+    config = { noticeChannelId: null };
+}
+
+// 공지 채널 ID 가져오기
 const noticeChannelId = config.noticeChannelId;
 
 // 클라이언트 생성
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// 공지 채널 ID 설정 (notice-config.json에서 불러옴)
+// 공지 채널 ID 설정
 client.noticeChannelId = noticeChannelId;
 
 // 명령어 로딩
@@ -24,15 +42,14 @@ for (const file of commandFiles) {
     client.commands.set(command.data.name, command);
 }
 
-// 봇이 준비되었을 때 로그
+// 봇이 준비되었을 때
 client.once(Events.ClientReady, () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
-    console.log(`공지 채널 ID: ${client.noticeChannelId}`); // 공지 채널 ID 로그로 출력
-
-    startNoticeWatcher(client);  // 공지 감시 기능 시작
+    console.log(`공지 채널 ID: ${client.noticeChannelId}`);
+    startNoticeWatcher(client);
 });
 
-// 슬래시 명령어 실행 핸들러
+// 슬래시 명령어 핸들러
 client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isChatInputCommand()) return;
 

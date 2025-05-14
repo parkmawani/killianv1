@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle} = require('discord.js');
 const puppeteer = require('puppeteer');
 const path = require('path');
 
@@ -80,11 +80,16 @@ module.exports = {
                     .setURL(noticeUrl)
                     .setImage(`attachment://${imageFile}`)
                     .setColor(0x00bfff)
+                const button = new ButtonBuilder()
+                    .setLabel('공지 확인') // 버튼 텍스트
+                    .setURL(noticeUrl) // 버튼 URL
+                    .setStyle(ButtonStyle.Link); // 버튼 스타일 (Link로 설정하여 URL 버튼으로 만듬)
+                const row = new ActionRowBuilder().addComponents(button);
 
                 await interaction.editReply({
                     content: '',
                     embeds: [embed],
-                    components: [],
+                    components: [row],
                     files: [attachment],
                 });
 
