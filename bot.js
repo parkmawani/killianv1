@@ -49,21 +49,34 @@ client.once(Events.ClientReady, () => {
     startNoticeWatcher(client);
 });
 
-// 슬래시 명령어 핸들러
 client.on(Events.InteractionCreate, async interaction => {
-    if (!interaction.isChatInputCommand()) return;
+    if (interaction.isChatInputCommand()) {
+        const command = client.commands.get(interaction.commandName);
+        if (!command) return;
 
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
-
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        console.error(error);
-        if (interaction.deferred || interaction.replied) {
-            await interaction.editReply({ content: '❌ 명령어 실행 중 오류가 발생했습니다.' });
-        } else {
-            await interaction.reply({ content: '❌ 명령어 실행 중 오류가 발생했습니다.', ephemeral: true });
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(error);
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply({ content: '❌ 명령어 실행 중 오류가 발생했습니다.' });
+            } else {
+                await interaction.reply({ content: '❌ 명령어 실행 중 오류가 발생했습니다.', ephemeral: true });
+            }
+        }
+    } else if (interaction.isStringSelectMenu()) {
+        // eventmaker.js 의 handleSelect 호출
+        const eventmakerCommand = client.commands.get('events');
+        if (!eventmakerCommand) return;
+        try {
+            await eventmakerCommand.handleSelect(interaction);
+        } catch (error) {
+            console.error(error);
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply({ content: '❌ 선택 처리 중 오류가 발생했습니다.' });
+            } else {
+                await interaction.reply({ content: '❌ 선택 처리 중 오류가 발생했습니다.', ephemeral: true });
+            }
         }
     }
 });
