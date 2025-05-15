@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const puppeteer = require('puppeteer-core');
+const puppeteer = require('puppeteer');
 const { EmbedBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const lastSentConfigPath = path.join(__dirname, 'last-sent.json');
@@ -107,7 +107,7 @@ async function startNoticeWatcher(client) {
             console.error('[❌ 공지 감시 오류]', error);
             if (browser) await browser.close();
         }
-    }, 60 * 1000); // 1분 간격
+    }, 30 * 1000); // 1분 간격
 }
 
 module.exports = { startNoticeWatcher };
