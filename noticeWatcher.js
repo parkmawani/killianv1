@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const puppeteer = require('puppeteer-core');
+const puppeteer = require('puppeteer');
 const { EmbedBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const lastSentConfigPath = path.join(__dirname, 'last-sent.json');
@@ -15,13 +15,26 @@ async function startNoticeWatcher(client) {
 
             const latest = await page.evaluate(() => {
                 const notice = document.querySelector('.board_list tbody tr');
-                const title = notice.querySelector('.tit a')?.textContent.trim();
-                const href = notice.querySelector('.tit a')?.getAttribute('href');
-                const date = notice.querySelector('.date')?.textContent.trim();
-                const type = notice.querySelector('.sort')?.textContent.trim();
+                if (!notice) return null;
+
+                const titleEl = notice.querySelector('.tit a');
+                const dateEl = notice.querySelector('.date');
+                const typeEl = notice.querySelector('.sort');
+
+                const title = titleEl?.textContent.trim();
+                const href = titleEl?.getAttribute('href');
+                const date = dateEl?.textContent.trim();
+                const type = typeEl?.textContent.trim();
                 const threadId = href?.split('/').pop();
+
                 return { title, date, type, threadId };
             });
+
+            if (!latest) {
+                console.log('❌ 공지를 찾을 수 없습니다. 셀렉터가 변경되었을 수 있습니다.');
+                await browser.close();
+                return;
+            }
 
             console.log(`[디버그] 최신 공지 ID: ${latest.threadId}`);
 
