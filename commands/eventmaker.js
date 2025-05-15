@@ -49,6 +49,10 @@ module.exports = {
         .setDescription('진행중인 이벤트 목록을 불러와 선택할 수 있습니다.'),
 
     async execute(interaction) {
+        if (!interaction.member.permissions.has('ADMINISTRATOR')) {
+            return interaction.reply({ content: '❌ 이 명령어는 관리자만 사용할 수 있습니다.', ephemeral: true });
+        }
+
         await interaction.deferReply();
 
         let events;
