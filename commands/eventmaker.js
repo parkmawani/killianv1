@@ -45,7 +45,7 @@ async function fetchEvents() {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('events')
+        .setName('이벤트생성')
         .setDescription('진행중인 이벤트 목록을 불러와 선택할 수 있습니다.'),
 
     async execute(interaction) {
