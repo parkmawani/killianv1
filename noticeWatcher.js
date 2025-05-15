@@ -20,7 +20,7 @@ async function startNoticeWatcher(client) {
             }
 
             // 1) 디스코드 최근 10개 메시지에서 공지 제목들 수집
-            const recentMessages = await channel.messages.fetch({ limit: 10 });
+            const recentMessages = await channel.messages.fetch({ limit: 15 });
             const sentTitles = recentMessages
                 .map((msg) => {
                     if (msg.embeds.length > 0) {
