@@ -14,18 +14,18 @@ async function startNoticeWatcher(client) {
             await page.goto('https://mabinogimobile.nexon.com/News/Notice', { waitUntil: 'domcontentloaded' });
 
             const latest = await page.evaluate(() => {
-                const notice = document.querySelector('.board_list tbody tr');
+                const notice = document.querySelector('ul.list li.item');
                 if (!notice) return null;
 
-                const titleEl = notice.querySelector('.tit a');
-                const dateEl = notice.querySelector('.date');
-                const typeEl = notice.querySelector('.sort');
+                const titleEl = notice.querySelector('a.title');
+                const dateEl = notice.querySelector('.date span');
+                const typeEl = notice.querySelector('.type span');
 
                 const title = titleEl?.textContent.trim();
-                const href = titleEl?.getAttribute('href');
+                const href = titleEl?.getAttribute('onclick')?.match(/link\((\d+),/);
                 const date = dateEl?.textContent.trim();
                 const type = typeEl?.textContent.trim();
-                const threadId = href?.split('/').pop();
+                const threadId = href ? href[1] : null;
 
                 return { title, date, type, threadId };
             });
