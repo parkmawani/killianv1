@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 
 function parseKoreanEventDate(dateStr) {
+    // 예: "2025.5.15(목) 점검 후 ~ 2025.5.22(목) 오전 5시 59분까지"
     const regex = /(\d{4})\.(\d{1,2})\.(\d{1,2}).*~\s*(\d{4})\.(\d{1,2})\.(\d{1,2}).*/;
     const match = dateStr.replace(/\s/g, '').match(regex);
     if (!match) return { start: null, end: null };
@@ -66,6 +67,7 @@ module.exports = {
             return interaction.editReply('현재 진행중인 이벤트가 없습니다.');
         }
 
+        // SelectMenu 만들기 (최대 25개)
         const options = events.slice(0, 25).map(event => ({
             label: event.title.length > 100 ? event.title.slice(0, 97) + '...' : event.title,
             description: event.dateText.length > 100 ? event.dateText.slice(0, 97) + '...' : event.dateText,
@@ -79,15 +81,16 @@ module.exports = {
                 .addOptions(options),
         );
 
-        await interaction.editReply({ content: '이벤트를 선택하세요', components: [row] });
+        await interaction.editReply({ content: '아래에서 이벤트를 선택하세요.', components: [row]});
     },
 
     async handleSelect(interaction) {
         if (!interaction.isStringSelectMenu()) return;
         if (interaction.customId !== 'select_event') return;
 
-        await interaction.deferReply(); // ephemeral 제거됨
+        await interaction.deferReply();
 
+        // 다시 fetch 해서 선택된 이벤트 찾기
         let events;
         try {
             events = await fetchEvents();
@@ -103,36 +106,33 @@ module.exports = {
             return interaction.editReply('❌ 선택한 이벤트 정보를 찾을 수 없습니다.');
         }
 
+        // 현재시간보다 시작시간이 이전이면 시작시간을 1분 후로 조정
         let startTime = event.start || new Date();
         if (startTime < new Date()) {
             startTime = new Date(Date.now() + 60000);
         }
 
+        // 끝나는 시간이 없으면 시작시간 + 1시간으로 설정
         const endTime = event.end || new Date(startTime.getTime() + 3600000);
 
         try {
             const scheduledEvent = await interaction.guild.scheduledEvents.create({
                 name: event.title,
-                privacyLevel: 2,
+                privacyLevel: 2, // GUILD_ONLY
                 scheduledStartTime: startTime,
                 scheduledEndTime: endTime,
                 description: event.dateText,
-                entityType: 3,
+                entityType: 3, // EXTERNAL
                 entityMetadata: {
                     location: event.link,
                 },
-                image: event.image || null,
+                image: event.image ? event.image : null,
             });
 
-            // 선택 메시지 삭제
-            await interaction.message.edit({ content: '', components: [] });
-
-            // 공개 followUp
-            await interaction.followUp({
-                content: `✅ 이벤트가 생성되었습니다. **[${scheduledEvent.name}](https://discord.gg/mabinogi01?event=${scheduledEvent.id})**`,
-                ephemeral: false,
+            await interaction.editReply({
+                  content: `✅ 이벤트가 생성되었습니다. **[${scheduledEvent.name}](https://discord.gg/mabinogi01?event=${scheduledEvent.id})**`,
+                  components: []
             });
-
         } catch (error) {
             console.error('[❌ 이벤트 생성 오류]', error);
             await interaction.editReply('❌ 이벤트 생성 중 오류가 발생했습니다.');
