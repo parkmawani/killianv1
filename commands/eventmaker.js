@@ -130,7 +130,7 @@ module.exports = {
             });
 
             await interaction.editReply({
-                  content: `✅ 이벤트가 생성되었습니다. **[${scheduledEvent.name}](https://discord.com/events/${interaction.guild.id}/${scheduledEvent.id})**,
+                  content: `✅ 이벤트가 생성되었습니다. **[${scheduledEvent.name}](https://discord.com/events/${interaction.guild.id}/${scheduledEvent.id})**`,
                   components: []
             });
         } catch (error) {
