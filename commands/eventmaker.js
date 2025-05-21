@@ -81,7 +81,7 @@ module.exports = {
                 .addOptions(options),
         );
 
-        await interaction.editReply({ content: '아래에서 이벤트를 선택하세요.', components: [row] });
+        await interaction.editReply({ content: '아래에서 이벤트를 선택하세요.', components: [row], flags: MessageFlags.Ephemeral });
     },
 
     async handleSelect(interaction) {
@@ -129,7 +129,9 @@ module.exports = {
                 image: event.image ? event.image : null,
             });
 
-            await interaction.editReply(`✅ 이벤트가 생성되었습니다: [${scheduledEvent.name}](${event.link})`);
+            await interaction.editReply({
+                  content: `✅ 이벤트가 생성되었습니다. **[${scheduledEvent.name}](https://discord.com/events/${interaction.guild.id}/${scheduledEvent.id})**`
+            });
         } catch (error) {
             console.error('[❌ 이벤트 생성 오류]', error);
             await interaction.editReply('❌ 이벤트 생성 중 오류가 발생했습니다.');
