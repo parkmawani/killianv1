@@ -74,7 +74,7 @@ client.on(Events.InteractionCreate, async interaction => {
         }
     } else if (interaction.isStringSelectMenu()) {
         // eventmaker.js 의 handleSelect 호출
-        const eventmakerCommand = client.commands.get('events');
+        const eventmakerCommand = client.commands.get('이벤트생성');
         if (!eventmakerCommand) return;
         try {
             await eventmakerCommand.handleSelect(interaction);
