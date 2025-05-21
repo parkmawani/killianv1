@@ -88,7 +88,7 @@ module.exports = {
         if (!interaction.isStringSelectMenu()) return;
         if (interaction.customId !== 'select_event') return;
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply();
 
         // 다시 fetch 해서 선택된 이벤트 찾기
         let events;
@@ -130,7 +130,7 @@ module.exports = {
             });
 
             await interaction.editReply({
-                  content: `✅ 이벤트가 생성되었습니다. **[${scheduledEvent.name}](https://discord.com/events/${interaction.guild.id}/${scheduledEvent.id})**`,
+                  content: `✅ 이벤트가 생성되었습니다. **[${scheduledEvent.name}](https://discord.gg/mabinogi01?event=${scheduledEvent.id})**`,
                   components: []
             });
         } catch (error) {
