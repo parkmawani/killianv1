@@ -9,6 +9,20 @@ const {
     AttachmentBuilder,
 } = require('discord.js');
 
+const seenFilePath = path.join(__dirname, 'seen_notices.txt');
+
+// 제목 기준 중복 확인 (텍스트 파일 기준)
+function hasSeenNotice(title) {
+    if (!fs.existsSync(seenFilePath)) return false;
+    const seenTitles = fs.readFileSync(seenFilePath, 'utf-8').split('\n').filter(Boolean);
+    return seenTitles.includes(title);
+}
+
+// 제목 기록
+function markNoticeAsSeen(title) {
+    fs.appendFileSync(seenFilePath, `${title}\n`);
+}
+
 async function startNoticeWatcher(client) {
     setInterval(async () => {
         let browser;
@@ -19,18 +33,7 @@ async function startNoticeWatcher(client) {
                 return;
             }
 
-            // 1) 디스코드 최근 10개 메시지에서 공지 제목들 수집
-            const recentMessages = await channel.messages.fetch({ limit: 15 });
-            const sentTitles = recentMessages
-                .map((msg) => {
-                    if (msg.embeds.length > 0) {
-                        return msg.embeds[0].title;
-                    }
-                    return msg.content;
-                })
-                .filter(Boolean);
-
-            // 2) Puppeteer로 사이트 공지 10개 크롤링
+            // Puppeteer로 사이트 공지 10개 크롤링
             browser = await puppeteer.launch({ headless: true });
             const page = await browser.newPage();
             await page.goto('https://mabinogimobile.nexon.com/News/Notice', {
@@ -55,12 +58,12 @@ async function startNoticeWatcher(client) {
                 return;
             }
 
-            // 3) 디스코드에 없는 새 공지만 필터링
+            // 텍스트 파일에 기록된 제목만 중복 확인
             const newNotices = siteNotices.filter(
-                (notice) => notice.title && !sentTitles.includes(notice.title),
+                (notice) => notice.title && !hasSeenNotice(notice.title)
             );
 
-            // 타입별 이미지 매핑 (파일 이름/경로는 실제 이미지 위치에 맞게 조정하세요)
+            // 타입별 이미지 매핑
             const typeImages = {
                 안내: 'ano.png',
                 점검: 'close.png',
@@ -69,7 +72,8 @@ async function startNoticeWatcher(client) {
                 주요상품: 'store.png',
             };
 
-            for (const notice of newNotices) {
+            // 공지 순서 최신이 위로 오도록 배열 뒤집기
+            for (const notice of newNotices.reverse()) {
                 const imageFile = typeImages[notice.type] || 'default-image.png';
                 const imagePath = path.join(__dirname, 'images', imageFile);
                 const imageAttachment = new AttachmentBuilder(imagePath);
@@ -92,6 +96,8 @@ async function startNoticeWatcher(client) {
                     components: [row],
                     files: [imageAttachment],
                 });
+
+                markNoticeAsSeen(notice.title);
                 console.log(`🔔 새 공지 전송됨: ${notice.title}`);
             }
 
@@ -105,7 +111,7 @@ async function startNoticeWatcher(client) {
             console.error('[❌ 공지 감시 오류]', error);
             if (browser) await browser.close();
         }
-    }, 30 * 1000); // 1분 간격
+    }, 30 * 1000); // 30초 간격
 }
 
 module.exports = { startNoticeWatcher };
