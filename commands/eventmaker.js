@@ -66,11 +66,14 @@ module.exports = {
             return interaction.editReply('현재 진행중인 이벤트가 없습니다.');
         }
 
-        const options = events.slice(0, 25).map(event => ({
-            label: event.title.length > 100 ? event.title.slice(0, 97) + '...' : event.title,
-            description: event.dateText.length > 100 ? event.dateText.slice(0, 97) + '...' : event.dateText,
-            value: event.id,
-        }));
+        const options = events
+            .filter(event => event.id && event.title && event.dateText) // 필수값이 모두 있는 이벤트만
+            .slice(0, 25)
+            .map(event => ({
+                label: event.title.length > 100 ? event.title.slice(0, 97) + '...' : event.title,
+                description: event.dateText.length > 100 ? event.dateText.slice(0, 97) + '...' : event.dateText,
+                value: event.id,
+            }));
 
         const row = new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder()
