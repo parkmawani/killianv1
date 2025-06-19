@@ -26,8 +26,8 @@ async function fetchEvents() {
             .filter(item => item.querySelector('div.type')?.textContent.trim() === '진행중')
             .map(item => {
                 const id = item.getAttribute('data-threadid');
-                const title = item.querySelector('div.descript div.order_1 a.title span').textContent.trim();
-                const dateText = item.querySelector('div.descript div.order_2 div.date span').textContent.trim();
+                const title = item.querySelector('div.descript div.order_1 a.title span')?.textContent.trim() || '';
+                const dateText = item.querySelector('div.descript div.order_2 div.date span')?.textContent.trim() || '';
                 const image = item.querySelector('div.thumbnail img')?.src || null;
                 const link = `https://mabinogimobile.nexon.com/News/Events/${id}`;
                 return { id, title, dateText, image, link };
