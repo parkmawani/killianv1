@@ -97,6 +97,15 @@ async function startNoticeWatcher(client) {
                     files: [imageAttachment],
                 });
 
+                if (channel.type === 15) {
+                    try {
+                        await sentMessage.crosspost();
+                        console.log(`📣 공지 발행 완료: ${notice.title}`);
+                    } catch (error) {
+                        console.warn(`❗ 공지 발행 실패: ${notice.title}`, error);
+                    }
+                }
+
                 markNoticeAsSeen(notice.title);
                 console.log(`🔔 새 공지 전송됨: ${notice.title}`);
             }
