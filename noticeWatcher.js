@@ -97,13 +97,6 @@ async function startNoticeWatcher(client) {
                     files: [imageAttachment],
                 });
 
-                try {
-                    await sentMessage.crosspost();
-                    console.log(`📣 공지 발행 완료: ${notice.title}`);
-                } catch (error) {
-                    console.warn(`❗ 공지 발행 실패 (무시됨일 수 있음): ${notice.title}`, error.message);
-                }
-
                 markNoticeAsSeen(notice.title);
                 console.log(`🔔 새 공지 전송됨: ${notice.title}`);
             }
