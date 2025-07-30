@@ -97,6 +97,13 @@ async function startUpdateWatcher(client) {
                     files: [imageAttachment],
                 });
 
+                try {
+                    await sentMessage.crosspost();
+                    console.log(`📣 공지 발행 완료: ${notice.title}`);
+                } catch (error) {
+                    console.warn(`❗ 공지 발행 실패 (무시됨일 수 있음): ${notice.title}`, error.message);
+                }
+
                 markUpdateAsSeen(update.title);
                 console.log(`📦 새 업데이트 전송됨: ${update.title}`);
             }
